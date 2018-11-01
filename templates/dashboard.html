@@ -1,0 +1,164 @@
+
+{% extends "layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+
+  <p></p>
+  <div class="container">
+  <h1 class="text-center"><strong>{{ g.user.profile.firstName }}'s Dashboard</strong></h1>
+
+  <div class="row">&nbsp;</div>
+  <div class="col-sm-12 offset-sm-1">
+      <h3><strong>Light Strips:</strong><input type="image" onclick="add_strip()" width ="20" height="20" src="/static/plus.svg"/></image></h3>
+  </div>
+  <div class="col-sm-12 offset-sm-1">
+  <ul>
+    {% for name, light_strip in user_object.light_strips.items() %}
+
+    <li><strong>{{name}} - </strong>Sections: <input type="image" onclick="add_section('{{light_strip.strip_id}}')" width ="15" height="15" src="/static/plus.svg"/></image>
+    <ol>
+      {% for section_dict in light_strip.return_sections_and_patterns_dict() %}
+        {% if "Solid" in section_dict['range_pattern'].get_description_string_small() %}
+            {% set r = section_dict['range_pattern'].get_current_color_dict()['r'] %}
+            {% set g = section_dict['range_pattern'].get_current_color_dict()['g'] %}
+            {% set b = section_dict['range_pattern'].get_current_color_dict()['b'] %}
+            {% set id =section_dict['range_pattern'].pattern_id%}
+        <li>Pixels: {{section_dict['range_start']+1}} - {{section_dict['range_end']+1}} - Status: {{section_dict['range_pattern'].get_description_string_small()}}  <input onclick="set_next( '{{id}}','{{light_strip.strip_id}}')" id="myColorPickerPopover" width = "20%" display="inline" type="text" style="background-color: rgb({{r}}, {{g}}, {{b}})" value="Change color"/>
+        {% else %}
+            <li>Pixels: {{section_dict['range_start']+1}} - {{section_dict['range_end']+1}} - Status: {{section_dict['range_pattern'].get_description_string_small()}} <input type="image" onclick="" width ="12" height="12" src="/static/edit.svg"/></image></li>
+        {% endif %}
+
+
+      {% endfor %}
+
+    </ol>
+    </li>
+
+    {% endfor %}
+  </ul>
+
+
+  </div>
+  </div>
+
+<script>
+function add_strip() {
+    var strip_id;
+    var pixel_count;
+    var display_name;
+    var id_in = prompt("Please enter a Strip ID", "");
+    if (id_in == null || id_in == "") {
+
+        alert("Error: invalid Strip ID");
+        return false;
+    } else {
+    	strip_id = id_in;
+    	var pix_in = prompt("How many pixels does this strip have?", "100");
+        if (pix_in == null || pix_in == "") {
+
+          alert("Error: invalid pixel count");
+          return false;
+        } else {
+            pixel_count = pix_in;
+            var name_in = prompt("What do you want to name this strip?", "");
+            if (name_in == null || name_in == "") {
+
+              alert("Error: invalid name");
+              return false;
+            } else {
+                display_name = name_in;
+                window.location.replace(`/add_strip/${strip_id}/${pixel_count}/${display_name}`);
+            }
+        }
+   }
+}
+</script>
+<script>
+  var next_set_pattern_id;
+  var next_set_strip_id;
+  function set_next(patt, strip){
+    next_set_pattern_id = patt;
+    next_set_strip_id = strip;
+    //alert(next_set_pattern_id);
+  }
+
+  function get_next_pattern(){
+    return next_set_pattern_id;
+  }
+  function get_next_strip(){
+    return next_set_strip_id;
+  }
+
+
+</script>
+<script>
+function add_section(strip_id) {
+    var start_pixel;
+    var end_pixel;
+    var st_in = prompt("You are about to create a new section. It will overwrite any sections it overlaps with.\nWhich pixel should this section start at (inclusive)?", "");
+    if (st_in == null || st_in == "") {
+
+        alert("Error: invalid pixel number");
+        return false;
+    } else {
+    	start_pixel = st_in - 1;
+    	var en_in = prompt("Which pixel should this section end at (inclusive)?", "");
+        if (en_in == null || en_in == "") {
+
+     	   alert("Error: invalid pixel number");
+          return false;
+        } else {
+            end_pixel = en_in - 1;
+            window.location.replace(`/add_section/${strip_id}/${start_pixel}/${end_pixel}`);
+
+        }
+
+
+    }
+
+
+}
+</script>
+<script>
+
+YUI().use(
+  'aui-color-picker-popover',
+  function(Y) {
+    var colorPicker = new Y.ColorPickerPopover(
+      {
+        trigger: '#myColorPickerPopover',
+        zIndex: 2
+      }
+    ).render();
+
+    colorPicker.on('select',
+      function(event) {
+        event.trigger.setStyle('backgroundColor', event.color);
+        //alert(`/set_pattern_solid_color/${get_next_pattern()}/${event.color}`);
+        window.location.replace(`/set_pattern_solid_color/${get_next_strip()}/${get_next_pattern()}/${hexToRgb(event.color.slice(1,event.color.length))}`);
+
+
+      }
+    );
+  }
+);
+</script>
+
+
+
+<script>
+function hexToRgb(hex) {
+    var bigint = parseInt(hex, 16);
+    var r = (bigint >> 16) & 255;
+    var g = (bigint >> 8) & 255;
+    var b = bigint & 255;
+
+    return r + "," + g + "," + b;
+}
+
+</script>
+
+{% endblock %}
+
