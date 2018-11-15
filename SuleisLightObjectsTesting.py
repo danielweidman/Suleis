@@ -40,5 +40,10 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(self.strip_obj_read.return_light_status_as_json(), '{"range_start": 0, "range_end": 99, "range_status": {"r": 255, "g": 255, "b": 229}}')
 
 
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

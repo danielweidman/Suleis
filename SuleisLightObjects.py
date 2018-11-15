@@ -94,7 +94,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         if start_led < 0:
             return "Error: section start led index is below 0"
         if end_led > self.leds_count-1:
-            return f"Error: section end led index is greater than that of the last led on the strip {self.leds_count-1}"
+            return f"Error: section end led index is greater than that of the last led on the strip {self.leds_count-1}" #user might see this as 99?
         self.sections_list.append(Section(self,start_led,end_led, f"Section {len(self.sections_list)+1}"))
         self.update_leds_and_sections()
         self.update_light_statuses()
@@ -105,7 +105,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
     def update_leds_and_sections(self):
         #CALL THIS ANY TIME A NEW Section IS ADDED (it's called automatically by add_new_section_and_update)
         #Section priorities are in reverse-priority: if two overlap, the one added later prevails
-        leds_and_sections_new = [self.default_section for led in range(0,self.leds_count-1)]
+        leds_and_sections_new = [self.default_section for led in range(0,self.leds_count)]
         for led_num in range(0,self.leds_count-1):
             for section in self.sections_list:
                 #print(section.display_name)
@@ -143,7 +143,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         curr_range_start = 0
         curr_range_end = 0
         curr_range_pattern = self.leds_and_sections[0].current_mode
-        for led_section in self.leds_and_sections:
+        for led_section in self.leds_and_sections[1:]:
             if curr_range_pattern == led_section.current_mode:
                 curr_range_end += 1
             else:
@@ -163,7 +163,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         curr_range_end = 0
         curr_range_status = self.leds_and_statuses[0]
         #range_num = 0
-        for led_status in self.leds_and_statuses:
+        for led_status in self.leds_and_statuses[1:]:
             if curr_range_status == led_status:
                 curr_range_end += 1
             else:
