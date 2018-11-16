@@ -94,7 +94,8 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         if start_led < 0:
             return "Error: section start led index is below 0"
         if end_led > self.leds_count-1:
-            return f"Error: section end led index is greater than that of the last led on the strip {self.leds_count-1}" #user might see this as 99?
+            return f"Error: section end led index is greater than that of the last led on the strip {self.leds_count}" #user might see this as 99?
+
         self.sections_list.append(Section(self,start_led,end_led, f"Section {len(self.sections_list)+1}"))
         self.update_leds_and_sections()
         self.update_light_statuses()
@@ -106,7 +107,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         #CALL THIS ANY TIME A NEW Section IS ADDED (it's called automatically by add_new_section_and_update)
         #Section priorities are in reverse-priority: if two overlap, the one added later prevails
         leds_and_sections_new = [self.default_section for led in range(0,self.leds_count)]
-        for led_num in range(0,self.leds_count-1):
+        for led_num in range(0,self.leds_count):
             for section in self.sections_list:
                 #print(section.display_name)
                 if (led_num <= section.initial_end_led) and (led_num >= section.initial_start_led):
@@ -123,12 +124,12 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
     def update_light_statuses(self):
         #For each unique section in this strip, call the update_light_status method
         #After we run this, we should be able to efficienntly assign each pixel status in the Strip
-        new_modes_list = [None for led in range(0,self.leds_count-1)]
+        new_modes_list = [None for led in range(0,self.leds_count)]
 
         for section in set(self.sections_list):
             section.update_light_status()
 
-        for led_num in range(0,self.leds_count-1):
+        for led_num in range(0,self.leds_count):
             new_modes_list[led_num] = self.leds_and_sections[led_num].get_light_status()
 
         self.leds_and_statuses = new_modes_list
@@ -141,9 +142,9 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
 
         ranges = []
         curr_range_start = 0
-        curr_range_end = 0
+        curr_range_end = -1
         curr_range_pattern = self.leds_and_sections[0].current_mode
-        for led_section in self.leds_and_sections[1:]:
+        for led_section in self.leds_and_sections:
             if curr_range_pattern == led_section.current_mode:
                 curr_range_end += 1
             else:
@@ -152,6 +153,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
                 curr_range_end = curr_range_start
                 curr_range_pattern = led_section.current_mode
         ranges.append({"range_start": curr_range_start, "range_end": curr_range_end, "range_pattern": curr_range_pattern})
+        print(ranges)
         return ranges
 
 
@@ -160,10 +162,10 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         self.update_light_statuses()  #Could add something here to not call this if it was called in last X seconds (NO: actually put that stuff in the pattern object, in case pattern is changed)
         ranges = []
         curr_range_start = 0
-        curr_range_end = 0
+        curr_range_end = -1
         curr_range_status = self.leds_and_statuses[0]
         #range_num = 0
-        for led_status in self.leds_and_statuses[1:]:
+        for led_status in self.leds_and_statuses:
             if curr_range_status == led_status:
                 curr_range_end += 1
             else:
@@ -174,7 +176,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
                 #range_num +=1
         ranges.append(json.dumps(({"range_start": curr_range_start, "range_end": curr_range_end,
                                            "range_status": curr_range_status})))
-
+        print("*".join(ranges))
         return "*".join(ranges)
 
 
