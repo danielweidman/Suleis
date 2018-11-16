@@ -1,5 +1,5 @@
 from SuleisLightObjects import MainDatabase, User, Section, Strip, Pattern, SolidPattern, TimePattern
-from flask import Flask, render_template, g, redirect, url_for
+from flask import Flask, render_template, g, flash, redirect, url_for
 from flask_oidc import OpenIDConnect
 from okta import UsersClient
 import pickle
@@ -62,7 +62,9 @@ def add_strip(strip_id, leds_count, display_name): #Process adding a strip
     if result == True:
         return render_template("dashboard.html", user_object=user_object)
     else:
-        return result
+        flash(result)
+        user_object = main_database.return_user_object(g.user)
+        return render_template("dashboard.html", user_object=user_object)
 
 
 @app.route("/get_strip_status/<strip_id>/")
@@ -92,7 +94,9 @@ def add_section(strip_id,start_led,end_led): #Process adding a section
             user_object = main_database.return_user_object(g.user)
             return render_template("dashboard.html", user_object=user_object)
         else:
-            return result
+            flash(result)
+            user_object = main_database.return_user_object(g.user)
+            return render_template("dashboard.html", user_object=user_object)
     except Exception as e: #could do better exceptionn handling
 
         return f"{e}:Strip not found or other error"
@@ -109,7 +113,8 @@ def set_section_solid_pattern(strip_id, section_id,R,G,B): #Process setting a se
         return redirect("/dashboard")
 
     else:
-        return "Error finding that section"
+        flash("Error finding that section")
+        return redirect("/dashboard")
 
 
 @app.route("/set_pattern_solid_color/<strip_id>/<pattern_id>/<R>,<G>,<B>") #JUST FOR TESting, need to accommodate different info block parameters
@@ -123,7 +128,8 @@ def set_pattern_solid_color(strip_id, pattern_id,R,G,B): #Process moodifying a S
         return redirect("/dashboard")
 
     else:
-        return "Error finding that section"
+        flash("Error finding that section")
+        return redirect("/dashboard")
 
 @app.route("/create_sunrise_sunet_pattern/<strip_id>/<section_id>") #JUST FOR TESting, need to accommodate different info block parameters
 @oidc.require_login
