@@ -1,8 +1,10 @@
-import json, uuid
+import json, uuid, astral
 import pandas as pd
+import numpy as np
 from abc import ABC, abstractmethod
 import datetime
-import pytz
+import pytz, copy
+
 
 
 
@@ -84,6 +86,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
     def get_pattern_by_id(self, pattern_id):#Returns the pattern belonging to this Strip with the given id (or False)
         for section in self.sections_list:
             if section.current_mode.pattern_id == pattern_id:
+
                 print("section.current_mode.pattern_id")
 
                 print(pattern_id)
@@ -117,6 +120,34 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         for section in self.sections_list:
             if section not in leds_and_sections_new:
                 self.sections_list.remove(section)
+
+        sections_found = []
+        last_section_found = None
+        for led_num in range(0, self.leds_count): #check if there are any sections that got split by the new section. If so, we should make those act independently, but share the same initial pattern settings
+            if leds_and_sections_new[led_num] == last_section_found:
+                leds_and_sections_new[led_num] = last_section_found
+
+            elif (leds_and_sections_new[led_num] in sections_found) and (not leds_and_sections_new[led_num] == last_section_found):
+                #We have just hit the first LED in a range that has the same section object as an earlier one
+                cut_in_half_section = leds_and_sections_new[led_num] #this is the one we'll have to copy and replace
+                new_section = copy.deepcopy(cut_in_half_section)
+                new_section.display_name = f"{new_section.display_name}c"
+                new_section.section_id = f"{new_section.section_id}c"
+                new_section.current_mode.pattern_id = str(uuid.uuid4())
+                last_section_found = new_section
+                leds_and_sections_new[led_num] = new_section
+                for led_num2 in range(led_num+1,self.leds_count):
+                    if leds_and_sections_new[led_num2] == cut_in_half_section:
+                        leds_and_sections_new[led_num2] = new_section
+                        print("propagated")
+                    else:
+                        break
+                self.sections_list.append(new_section)
+                print("made new section")
+
+            elif leds_and_sections_new[led_num] not in sections_found:
+                sections_found.append(leds_and_sections_new[led_num])
+                last_section_found = leds_and_sections_new[led_num]
 
         self.leds_and_sections = leds_and_sections_new
 
@@ -153,7 +184,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
                 curr_range_end = curr_range_start
                 curr_range_pattern = led_section.current_mode
         ranges.append({"range_start": curr_range_start, "range_end": curr_range_end, "range_pattern": curr_range_pattern})
-        print(ranges)
+        #print(ranges)
         return ranges
 
 
@@ -176,7 +207,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
                 #range_num +=1
         ranges.append(json.dumps(({"range_start": curr_range_start, "range_end": curr_range_end,
                                            "range_status": curr_range_status})))
-        print("*".join(ranges))
+        #print("*".join(ranges))
         return "*".join(ranges)
 
 
@@ -229,11 +260,11 @@ class Pattern(ABC):
 class SolidPattern:
     def __init__(self, color_dict, pattern_id):
         #Format of colorDict: {'r':255,'g':255,'b':255}
-        if color_dict['g'] > 0:
+        if color_dict['b'] > 0:
 
-            color_dict['g'] = min(int(1.1*color_dict['g']),255)
-            #color_dict['r'] = int(0.95 * color_dict['r'])
-            color_dict['b'] = int(0.90 * color_dict['b'])
+            color_dict['r'] = min(int(1.05*color_dict['g']),255)
+            #color_dict['g'] = int(0.95 * color_dict['r'])
+            color_dict['b'] = int(0.95 * color_dict['b'])
         self.color_dict = color_dict
 
         self.pattern_id = pattern_id
@@ -256,18 +287,20 @@ class TimePattern:
         #Format of time_color_dicts: (0:{'r':255,'g':255,'b':255},180:{'r':255,'g':255,'b':255},600:{'r':255,'g':255,'b':255}), where the numbers 0, 180, and 600 represent minutes since the start of the day
         #Format of gradient_type
 
-        self.time_color_table = pd.DataFrame.from_dict(time_color_dicts)
+        self.time_color_table = pd.DataFrame.from_dict(time_color_dicts, orient='index')
         self.gradient_type = gradient_type
         self.time_zone = time_zone
         self.pattern_id = pattern_id
+
+
         self.color_dict = None
 
     def get_current_status_dict(self):
         now = datetime.datetime.now(pytz.timezone(self.time_zone))
 
         minutes_since_midnight = round((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()/60)
-        if gradient_type == "fade":
-            self.color_dict = self.time_color_table.append(pd.Series({'r':np.NaN,'g':np.NaN,'b':np.NaN},name=minutes_since_midnight)).interpolate(method='index').loc[minutes_since_midnight].to_dict.round().to_dict()
+        if self.gradient_type == "fade":
+            self.color_dict = self.time_color_table.append(pd.Series({'r':np.NaN,'g':np.NaN,'b':np.NaN},name=minutes_since_midnight)).interpolate(method='index').round().loc[minutes_since_midnight].to_dict()
 
         return {'mode':'solid','color':self.color_dict}
 
@@ -308,8 +341,9 @@ class SunPattern:
 
         minutes_since_midnight_now = round((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()/60)
 
-        loc = astral.Location(('place','place',lat,lon,self.time_zone))
-
+        loc = astral.Location(('place','place',self.lat,self.long,self.time_zone))
+        print(self.lat)
+        print(self.long)
         minutes_since_midnight_dawn = round((loc.dawn() - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()/60)
 
         minutes_since_midnight_sunrise = round((loc.sunrise() - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds() / 60)
@@ -319,10 +353,10 @@ class SunPattern:
             (loc.dusk() - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds() / 60)
 
 
-        self.time_color_table =  pd.DataFrame.from_dict({0:self.sun_down_color_dict, minutes_since_midnight_dawn:self.sun_down_color_dict,minutes_since_midnight_sunrise:self.sun_up_color_dict,minutes_since_midnight_sunset:self.sun_up_color_dict,minutes_since_midnight_dusk:self.sun_down_color_dict})
+        self.time_color_table =  pd.DataFrame.from_dict({0:self.sun_down_color_dict, minutes_since_midnight_dawn:self.sun_down_color_dict,minutes_since_midnight_sunrise:self.sun_up_color_dict,minutes_since_midnight_sunset:self.sun_up_color_dict,minutes_since_midnight_dusk:self.sun_down_color_dict}, orient='index')
 
-
-        current_color = self.time_color_table.append(pd.Series({'r':np.NaN,'g':np.NaN,'b':np.NaN},name=minutes_since_midnight)).interpolate(method='index').loc[minutes_since_midnight].to_dict.round().to_dict()
+        #3print(self.time_color_table.append(pd.Series({'r':np.NaN,'g':np.NaN,'b':np.NaN},name=minutes_since_midnight_now)).interpolate(method='index'))
+        current_color = self.time_color_table.append(pd.Series({'r':np.NaN,'g':np.NaN,'b':np.NaN},name=minutes_since_midnight_now)).interpolate(method='index').round().loc[minutes_since_midnight_now].to_dict()
         return {'mode':'solid','color':current_color}
 
 
