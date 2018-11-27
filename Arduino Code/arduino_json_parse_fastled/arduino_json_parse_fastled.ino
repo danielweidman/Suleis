@@ -2,7 +2,7 @@
 
 #include <ArduinoJson.h>
 #include<FastLED.h>
-#define MAX_SECTION_COUNT 16
+#define MAX_SECTION_COUNT 6
 #define NUM_LEDS 100
 //#define FASTLED_ALLOW_INTERRUPTS 0
 
@@ -18,7 +18,8 @@ int greens[MAX_SECTION_COUNT];
 int blues[MAX_SECTION_COUNT];
 uint8_t special_gHue[MAX_SECTION_COUNT]; // rotating "base color" used by many of the patterns
 bool special_bools[MAX_SECTION_COUNT];
-
+int special_ints[MAX_SECTION_COUNT];
+int special_move_speed = 1; //currenntly used for 'sp' mode
 CRGB *special_led_ptr;
 
 int last_index = 0;
@@ -84,6 +85,7 @@ void set_range_arrays(int index, int start_led, int end_led, String mode_code, i
   if (mode_code == "so") {
     special_bools[index] = true;
   }
+ 
   reds[index] = r;
   greens[index] = g;
   blues[index] = b;
@@ -237,8 +239,109 @@ void process_lights() {
         }
       }
     }
+    
+    else if (mode_codes[i] == "pp"){
+      EVERY_N_MILLISECONDS(20){
+        special_gHue[i]+=4; // slowly cycle the "base color" through the rainbow
+        
+      
+      if (special_ints[i]<starts[i] or special_ints[i]>ends[i]){ //memory-efficient way of dealing with first iteration
+          special_ints[i] = starts[i];
+      }
+        
+      if (special_bools[i]) { //moving up in numbers
+        leds(starts[i], ends[i]).fadeToBlackBy(60);
+        CHSV to_set = CHSV(special_gHue[i], 255, 255);
+        
+        leds[special_ints[i]] = to_set;
+        if(special_ints[i]<ends[i]) { //still moving up
+          special_ints[i]++;
+        }
+        else{ //reached the end
+          //special_ints[i] = starts[i];
+          special_bools[i] = false;
+        }
+        
+      }
+      else { //moving down in numbers
+        leds(starts[i], ends[i]).fadeToBlackBy(60);
+        CHSV to_set = CHSV(special_gHue[i], 255, 255);
 
+        leds[special_ints[i]] = to_set;
+        if(special_ints[i]>starts[i]) { //still moving up
+          special_ints[i]--;
+        }
+        else{ //reached the end
+          //special_ints[i] = ends[i];
+          special_bools[i] = true;
+        }
+      }        
+      }
+    }
+    else if (mode_codes[i] == "sp"){ //speed-variable ping-pong
+      EVERY_N_MILLISECONDS(20){
+        special_gHue[i]+=8; // slowly cycle the "base color" through the rainbow
+        
 
+      
+      if (special_ints[i]<starts[i] or special_ints[i]>ends[i]){ //memory-efficient way of dealing with first iteration
+          special_ints[i] = starts[i];
+      }
+      int new_move_speed = 3;
+      //Serial.println(min(abs(special_ints[i]-starts[i]),abs(special_ints[i]-ends[i])));
+      //Serial.println(round((ends[i]-starts[i]))/6);
+      if (min(abs(special_ints[i]-starts[i]),abs(special_ints[i]-ends[i])) < round((ends[i]-starts[i]))/6){
+        new_move_speed-=2;
+      }
+      else if(min(abs(special_ints[i]-starts[i]),abs(special_ints[i]-ends[i])) < round((ends[i]-starts[i]))/3){
+        new_move_speed-=1;
+      }
+      
+      if (special_bools[i]) { //moving up in numbers
+        leds(starts[i], ends[i]).fadeToBlackBy(120);
+        CHSV to_set = CHSV(special_gHue[i], 255, 255);
+        
+        leds[special_ints[i]] = to_set;
+        if (special_move_speed > 1){
+            leds[special_ints[i]-1] = to_set;
+          }
+          if (special_move_speed > 2){
+            leds[special_ints[i]-2] = to_set;
+          }
+        if(special_ints[i]+new_move_speed <= ends[i]) { //still moving up
+          special_ints[i]+=new_move_speed;
+          special_move_speed = new_move_speed;
+        }
+        else{ //reached the end
+          //special_ints[i] = starts[i];
+          special_bools[i] = false;
+        }
+        
+      }
+      else { //moving down in numbers
+        leds(starts[i], ends[i]).fadeToBlackBy(120);
+        CHSV to_set = CHSV(special_gHue[i], 255, 255);
+
+        leds[special_ints[i]] = to_set;
+        if (special_move_speed > 1){
+            leds[special_ints[i]+1] = to_set;
+            
+          }
+          if (special_move_speed > 2){
+            leds[special_ints[i]+2] = to_set;
+          }
+        if(special_ints[i]-new_move_speed >= starts[i]) { //still moving up
+          special_ints[i]-=new_move_speed;
+          special_move_speed = new_move_speed;
+          
+        }
+        else{ //reached the end
+          //special_ints[i] = ends[i];
+          special_bools[i] = true;
+        }
+      }        
+      }
+    }
   }
   //ledStrip.write(colors, LED_COUNT);
   FastLED.show();
