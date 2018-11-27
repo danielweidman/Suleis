@@ -21,13 +21,67 @@
     <ol>
       {% for section_dict in light_strip.return_sections_and_patterns_dict() %}
         {% if "Solid" in section_dict['range_pattern'].get_description_string_small() %}
-            {% set r = section_dict['range_pattern'].get_current_color_dict()['r'] %}
-            {% set g = section_dict['range_pattern'].get_current_color_dict()['g'] %}
-            {% set b = section_dict['range_pattern'].get_current_color_dict()['b'] %}
+            {% set r = section_dict['range_pattern'].get_current_status_dict()['color']['r'] %}
+            {% set g = section_dict['range_pattern'].get_current_status_dict()['color']['g'] %}
+            {% set b = section_dict['range_pattern'].get_current_status_dict()['color']['b'] %}
             {% set id =section_dict['range_pattern'].pattern_id%}
-        <li>Pixels: {{section_dict['range_start']+1}} - {{section_dict['range_end']+1}} - Status: {{section_dict['range_pattern'].get_description_string_small()}}  <input onclick="set_next( '{{id}}','{{light_strip.strip_id}}')" id="myColorPickerPopover" width = "20%" display="inline" type="text" style="background-color: rgb({{r}}, {{g}}, {{b}})" value="Change color"/>
+        <li>Pixels: {{section_dict['range_start']+1}} - {{section_dict['range_end']+1}} - Status: <select id="{{section_dict['range_section'].section_id}}" onchange="onPatternTypeChange(this.id, this.value)">
+                                                                                                                                                                              <option value="Solid Color" selected>Solid Color</option>
+                                                                                                                                                                              <option value="Dynamic Pattern">Dynamic Pattern</option>
+                                                                                                                                                                              <option value="Sun-based Pattern">Sun-based Pattern</option>
+                                                                                                                                                                              <option value="Time-based Pattern">Time-based Pattern</option>
+                                                                                                                                                                            </select>
+                                                                                                                                                                            <select id="dynamic_selector_{{section_dict['range_section'].section_id}}" style="visibility:hidden" onchange="dynChange(this.id,{{light_strip.strip_id}},this.value)">
+                                                                                                                                                                              <option value="cc">Color-cycle</option>
+                                                                                                                                                                              <option value="rb">Rainbow</option>
+                                                                                                                                                                              <option value="ws">Strobe (white)</option>
+                                                                                                                                                                              <option value="cs">Strobe (colors)</option>
+                                                                                                                                                                              <option value="pp">Ping-pong</option>
+                                                                                                                                                                              <option value="sp">Ping-pong (with acceleration)</option>
+                                                                                                                                                                            </select>
+
+            <span id="color_picker_box_{{ section_dict['range_section'].section_id }}" style="visibility:visible"/> <input onclick="set_next( '{{id}}','{{light_strip.strip_id}}')" id="myColorPickerPopover" width = "20%" display="inline" type="text" style="background-color: rgb({{r}}, {{g}}, {{b}})" value="Change color"/> </li>
         {% else %}
-            <li>Pixels: {{section_dict['range_start']+1}} - {{section_dict['range_end']+1}} - Status: {{section_dict['range_pattern'].get_description_string_small()}} <input type="image" onclick="" width ="12" height="12" src="/static/edit.svg"/></image></li>
+            <li>Pixels: {{section_dict['range_start']+1}} - {{section_dict['range_end']+1}} - Status: <select id="{{section_dict['range_section'].section_id}}" onchange="onPatternTypeChange(this.id, this.value)">
+                                                                                                                                                                              <option value="Solid Color" >Solid Color</option>
+                                                                                                                                                                              <option value="Dynamic Pattern" selected>Dynamic Pattern</option>
+                                                                                                                                                                              <option value="Sun-based Pattern">Sun-based Pattern</option>
+                                                                                                                                                                              <option value="Time-based Pattern">Time-based Pattern</option>
+                                                                                                                                                                            </select>
+                                                                                                                                                                            <select id="dynamic_selector_{{section_dict['range_section'].section_id}}" style="visibility:visible" onchange="dynChange(this.id,{{light_strip.strip_id}},this.value)">
+                                                                                                                                                                                {% if "{{section_dict['range_pattern'].pattern_code}}" == "cc" %}
+                                                                                                                                                                                    <option value="cc" selected>Color-cycle</option>
+                                                                                                                                                                                {% else %}
+                                                                                                                                                                                     <option value="cc">Color-cycle</option>
+                                                                                                                                                                                {% endif %}
+                                                                                                                                                                                {% if "{{section_dict['range_pattern'].pattern_code}}" == "rb" %}
+                                                                                                                                                                                    <option value="rb" selected>Rainbow</option>
+                                                                                                                                                                                {% else %}
+                                                                                                                                                                                     <option value="rb">Rainbow</option>
+                                                                                                                                                                                {% endif %}
+                                                                                                                                                                                {% if "{{section_dict['range_pattern'].pattern_code}}" == "ws" %}
+                                                                                                                                                                                    <option value="ws" selected>Strobe (white)</option>
+                                                                                                                                                                                {% else %}
+                                                                                                                                                                                     <option value="ws">Strobe (white)</option>
+                                                                                                                                                                                {% endif %}
+                                                                                                                                                                                {% if "{{section_dict['range_pattern'].pattern_code}}" == "cs" %}
+                                                                                                                                                                                    <option value="cs" selected>Strobe (color)</option>
+                                                                                                                                                                                {% else %}
+                                                                                                                                                                                     <option value="cs">Strobe (color)</option>
+                                                                                                                                                                                {% endif %}
+                                                                                                                                                                                {% if "{{section_dict['range_pattern'].pattern_code}}" == "pp" %}
+                                                                                                                                                                                    <option value="pp" selected>Ping-pong</option>
+                                                                                                                                                                                {% else %}
+                                                                                                                                                                                     <option value="pp">Ping-pong</option>
+                                                                                                                                                                                {% endif %}
+                                                                                                                                                                                {% if "{{section_dict['range_pattern'].pattern_code}}" == "sp" %}
+                                                                                                                                                                                    <option value="sp" selected>Ping-pong (with acceleration)</option>
+                                                                                                                                                                                {% else %}
+                                                                                                                                                                                     <option value="sp">Ping-pong (with acceleration)</option>
+                                                                                                                                                                                {% endif %}
+                                                                                                                                                                            </select>
+            <span id="color_picker_box_{{ section_dict['range_section'].section_id }}" style="visibility:visible"/> <input onclick="set_next( '{{id}}','{{light_strip.strip_id}}')" id="myColorPickerPopover" width = "20%" display="inline" type="text" style="background-color: rgb({{r}}, {{g}}, {{b}})" value="Change color"/> </li>
+
         {% endif %}
 
 
@@ -158,6 +212,45 @@ function hexToRgb(hex) {
     return r + "," + g + "," + b;
 }
 
+</script>
+
+<script>
+function onPatternTypeChange(id, val) {
+	alert("dynamic_selector_"+id);
+	if (val=="Dynamic Pattern"){
+    	document.getElementById ( "dynamic_selector_"+id ).style.visibility = 'visible';
+
+    }
+    else{
+    	document.getElementById ( "dynamic_selector_"+id ).style.visibility = 'hidden';
+   	}
+
+    if (val=="Solid Color"){
+    	document.getElementById ( "color_picker_box_sectionid" ).style.visibility = 'visible';
+
+    }
+    else{
+    	document.getElementById ( "color_picker_box_sectionid" ).style.visibility = 'hidden';
+   	}
+
+
+
+}
+</script>
+
+
+
+
+
+<script>
+
+function dynChange(id, strip_id, val) {
+	alert(strip_id);
+	section_id = id.replace("dynamic_selector_","");
+    window.location.replace(`/set_section_dynamic_pattern/${strip_id}/${section_id}/${val}`);
+
+
+}
 </script>
 
 {% endblock %}
