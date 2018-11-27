@@ -216,7 +216,7 @@ function hexToRgb(hex) {
 
 <script>
 function onPatternTypeChange(id, val) {
-	alert("dynamic_selector_"+id);
+
 	if (val=="Dynamic Pattern"){
     	document.getElementById ( "dynamic_selector_"+id ).style.visibility = 'visible';
 
@@ -245,7 +245,7 @@ function onPatternTypeChange(id, val) {
 <script>
 
 function dynChange(id, strip_id, val) {
-	alert(strip_id);
+	
 	section_id = id.replace("dynamic_selector_","");
     window.location.replace(`/set_section_dynamic_pattern/${strip_id}/${section_id}/${val}`);
 
