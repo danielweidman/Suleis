@@ -12,7 +12,7 @@ class MainDatabase: #Class that represents main database of users, strips, secti
     def __init__(self):
         self.users_database = pd.DataFrame(columns=["User ID", "User Object"]) #DataFrame of users for fast user locating
         self.strips_database = pd.DataFrame(columns=["Strip ID", "Strip Object"]) #use to make sure one strip isn't attached to multiple accounts, and fast strip object locating
-        self.DYNAMIC_PATTERN_CODES = {'Color cycle':'cc'}
+        self.DYNAMIC_PATTERN_NAMES = {'cc':'Color cycle','rb':'Rainbow','cs':'Strobe (color)','ws':'Strobe (white)','pp':'Ping-pong','sp':'Ping-pong (with acceleration)'}
     def return_user_object(self,user): #returns the user's object if user is returning, or makes a new one and then returns it if it is a new user. If user is none (no logged in?), returns false
         if user != None:
 
@@ -175,15 +175,17 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         curr_range_start = 0
         curr_range_end = -1
         curr_range_pattern = self.leds_and_sections[0].current_mode
+        curr_range_section = self.leds_and_sections[0]
         for led_section in self.leds_and_sections:
             if curr_range_pattern == led_section.current_mode:
                 curr_range_end += 1
             else:
-                ranges.append({"range_start" : curr_range_start,"range_end" : curr_range_end, "range_pattern" : curr_range_pattern})
+                ranges.append({"range_start" : curr_range_start,"range_end" : curr_range_end, "range_pattern" : curr_range_pattern, "range_section" : curr_range_section})
                 curr_range_start = curr_range_end + 1
                 curr_range_end = curr_range_start
                 curr_range_pattern = led_section.current_mode
-        ranges.append({"range_start": curr_range_start, "range_end": curr_range_end, "range_pattern": curr_range_pattern})
+                curr_range_section = led_section
+        ranges.append({"range_start": curr_range_start, "range_end": curr_range_end, "range_pattern": curr_range_pattern, "range_section" : curr_range_section})
         #print(ranges)
         return ranges
 
@@ -312,10 +314,10 @@ class TimePattern:
 
 
 class DynamicPattern:
-    def __init__(self, pattern_name, pattern_id):
+    def __init__(self, pattern_code, pattern_id):
         self.pattern_id = pattern_id;
-        self.pattern_name = pattern_name;
-        self.pattern_code = self.DYNAMIC_PATTERN_CODES[pattern_name]
+        self.pattern_name = self.DYNAMIC_PATTERN_NAMES[pattern_code]
+        self.pattern_code;
 
     def get_current_status_dict(self):
         return {'mode':self.pattern_code, 'color':{'r':0,'g':0,'b':0}}
