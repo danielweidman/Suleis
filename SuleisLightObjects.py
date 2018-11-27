@@ -317,7 +317,7 @@ class DynamicPattern:
     def __init__(self, pattern_code, pattern_id):
         self.pattern_id = pattern_id;
         self.pattern_name = DYNAMIC_PATTERN_NAMES[pattern_code]
-        self.pattern_code;
+        self.pattern_code = pattern_code
 
     def get_current_status_dict(self):
         return {'mode':self.pattern_code, 'color':{'r':0,'g':0,'b':0}}
