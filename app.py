@@ -7,11 +7,12 @@ import uuid
 
 #Initialize the components needed for the Okta accounts system
 
-
 try: #Try to load the database from the saved pickle, make a new one if that fails
     main_database = pickle.load(open("user_database.p",'rb'))
 except:
     main_database = MainDatabase()
+
+reader = maxminddb.open_database('GeoLite2-City.mmdb')
 
 def save_database(): #Save the database to a pickle file
     pickle.dump(main_database,open("user_database.p",'wb'))
@@ -62,15 +63,15 @@ def add_strip(strip_id, leds_count, display_name): #Process adding a strip
     if result == True:
         return render_template("dashboard.html", user_object=user_object)
     else:
-        flash(result)
-        user_object = main_database.return_user_object(g.user)
-        return render_template("dashboard.html", user_object=user_object)
+        return result
 
 
 @app.route("/get_strip_status/<strip_id>/")
 def get_strip_status(strip_id): #Serve the strip status
     #print(main_database.strips_database)
     #strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
+    strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
+    return strip_obj.return_light_status_as_json()
     try:
         strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
         return strip_obj.return_light_status_as_json()
@@ -94,9 +95,7 @@ def add_section(strip_id,start_led,end_led): #Process adding a section
             user_object = main_database.return_user_object(g.user)
             return render_template("dashboard.html", user_object=user_object)
         else:
-            flash(result)
-            user_object = main_database.return_user_object(g.user)
-            return render_template("dashboard.html", user_object=user_object)
+            return result
     except Exception as e: #could do better exceptionn handling
 
         return f"{e}:Strip not found or other error"
@@ -113,9 +112,20 @@ def set_section_solid_pattern(strip_id, section_id,R,G,B): #Process setting a se
         return redirect("/dashboard")
 
     else:
-        flash("Error finding that section")
+        return "Error finding that section"
+
+@app.route("/set_section_dynamic_pattern/<strip_id>/<section_id>/<dynamic_mode_code>")
+@oidc.require_login
+def set_section_dynamic_pattern(strip_id, section_id,dynamic_mode_code): #Process setting a section pattern
+    #print(main_database.strips_database)
+    strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
+    section_obj = strip_obj.get_section_by_id(section_id)
+    if section_obj != False:
+        section_obj.set_pattern(DynamicPattern(dynamic_mode_code,str(uuid.uuid4())))
         return redirect("/dashboard")
 
+    else:
+        return "Error finding that section"
 
 @app.route("/set_pattern_solid_color/<strip_id>/<pattern_id>/<R>,<G>,<B>") #JUST FOR TESting, need to accommodate different info block parameters
 @oidc.require_login
@@ -128,15 +138,34 @@ def set_pattern_solid_color(strip_id, pattern_id,R,G,B): #Process moodifying a S
         return redirect("/dashboard")
 
     else:
-        flash("Error finding that section")
-        return redirect("/dashboard")
+        return "Error finding that section"
 
-@app.route("/create_sunrise_sunet_pattern/<strip_id>/<section_id>") #JUST FOR TESting, need to accommodate different info block parameters
+@app.route("/create_sun_pattern/<strip_id>/<section_id>") #JUST FOR TESting, need to accommodate different info block parameters
 @oidc.require_login
 def create_sunrise_sunset_page(strip_id, section_id):
-    lat = reader.get(request.remote_addr)['location']['latitude']
-    lon = reader.get(request.remote_addr)['location']['longitude']
+    #print((request.remote_addr))
+    #print(reader.get(request.remote_addr))
+    try:
+        lat = reader.get(request.remote_addr)['location']['latitude']
+        lon = reader.get(request.remote_addr)['location']['longitude']
+    except:
+        lat=0
+        lon=0
 
-    return "something"
+    return f"something...lat:{lat}, lon:{lon}"
 
+@app.route("/set_sun_pattern/<strip_id>/<section_id>/<lat>/<lon>/<time_zone>/<R_up>/<G_up>/<B_up>/<R_down>/<G_down>/<B_down>/") #JUST FOR TESting, need to accommodate different info block parameters
+def set_sunrise_sunset_pattern(strip_id, section_id, lat, lon, time_zone, R_up, G_up, B_up, R_down, G_down, B_down):
+    strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
+    section_obj = strip_obj.get_section_by_id(section_id)
+    section_obj.set_pattern(SunPattern(float(lat), float(lon), time_zone, {'r':int(R_down), 'g':int(G_down), 'b':int(B_down)}, {'r':int(R_up), 'g':int(G_up), 'b':int(B_up)}, str(uuid.uuid4())))
 
+    return section_obj.current_mode.pattern_id
+
+@app.route("/print_section_ids/<strip_id>") #JUST FOR TESting, need to accommodate different info block parameters
+def print_section_ids(strip_id):
+    strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
+    for section in strip_obj.sections_list:
+        print(section.section_id)
+
+    return "done"
