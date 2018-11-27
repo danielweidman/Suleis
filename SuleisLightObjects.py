@@ -5,14 +5,14 @@ from abc import ABC, abstractmethod
 import datetime
 import pytz, copy
 
-
+DYNAMIC_PATTERN_NAMES = {'cc': 'Color cycle', 'rb': 'Rainbow', 'cs': 'Strobe (color)', 'ws': 'Strobe (white)',
+                         'pp': 'Ping-pong', 'sp': 'Ping-pong (with acceleration)'}
 
 
 class MainDatabase: #Class that represents main database of users, strips, sections, and active patterns
     def __init__(self):
         self.users_database = pd.DataFrame(columns=["User ID", "User Object"]) #DataFrame of users for fast user locating
         self.strips_database = pd.DataFrame(columns=["Strip ID", "Strip Object"]) #use to make sure one strip isn't attached to multiple accounts, and fast strip object locating
-        self.DYNAMIC_PATTERN_NAMES = {'cc':'Color cycle','rb':'Rainbow','cs':'Strobe (color)','ws':'Strobe (white)','pp':'Ping-pong','sp':'Ping-pong (with acceleration)'}
     def return_user_object(self,user): #returns the user's object if user is returning, or makes a new one and then returns it if it is a new user. If user is none (no logged in?), returns false
         if user != None:
 
@@ -316,7 +316,7 @@ class TimePattern:
 class DynamicPattern:
     def __init__(self, pattern_code, pattern_id):
         self.pattern_id = pattern_id;
-        self.pattern_name = self.DYNAMIC_PATTERN_NAMES[pattern_code]
+        self.pattern_name = DYNAMIC_PATTERN_NAMES[pattern_code]
         self.pattern_code;
 
     def get_current_status_dict(self):
