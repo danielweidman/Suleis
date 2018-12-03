@@ -119,7 +119,33 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         #print(leds_and_sections_new)
         for section in self.sections_list:
             if section not in leds_and_sections_new:
+
                 self.sections_list.remove(section)
+
+
+        sections_found = []
+
+        for led_num in range(0, self.leds_count):
+            if leds_and_sections_new[led_num] not in sections_found:
+                #first time seeing this section
+                #no change to leds_and_sections_found_new
+                sections_found.append(leds_and_sections_new[led_num])
+            else:
+                #we have already found this section
+
+                if not leds_and_sections_new[led_num] == sections_found[-1]:
+                    #section has been found before, but it isn't the most recent section
+                    #now we need to make a copy
+                    new_section = copy.deepcopy(leds_and_sections_new[led_num])
+                    new_section.initial_start_led = led_num
+                    self.sections_list.append(new_section)
+                    sections_found.append(new_section)
+
+
+
+
+        """
+
 
         sections_found = []
         last_section_found = None
@@ -143,11 +169,13 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
                     else:
                         break
                 self.sections_list.append(new_section)
+                sections_found.append(new_section)
                 print("made new section")
 
             elif leds_and_sections_new[led_num] not in sections_found:
                 sections_found.append(leds_and_sections_new[led_num])
                 last_section_found = leds_and_sections_new[led_num]
+        """
 
         self.leds_and_sections = leds_and_sections_new
 
@@ -264,7 +292,7 @@ class SolidPattern:
         #Format of colorDict: {'r':255,'g':255,'b':255}
         if color_dict['b'] > 0:
 
-            color_dict['r'] = min(int(1.05*color_dict['g']),255)
+            color_dict['r'] = min(int(1.05*color_dict['r']),255)
             #color_dict['g'] = int(0.95 * color_dict['r'])
             color_dict['b'] = int(0.95 * color_dict['b'])
         self.color_dict = color_dict
