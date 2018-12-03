@@ -1,11 +1,14 @@
-from SuleisLightObjects import MainDatabase, User, Section, Strip, Pattern, SolidPattern, TimePattern
-from flask import Flask, render_template, g, flash, redirect, url_for
+from SuleisLightObjects import MainDatabase, User, Section, Strip, Pattern, SolidPattern, TimePattern, SunPattern, DynamicPattern
+from flask import Flask, render_template, g, redirect, url_for, request
 from flask_oidc import OpenIDConnect
 from okta import UsersClient
-import pickle
+import pickle, astral
 import uuid
+import maxminddb
 
 #Initialize the components needed for the Okta accounts system
+
+
 
 try: #Try to load the database from the saved pickle, make a new one if that fails
     main_database = pickle.load(open("user_database.p",'rb'))
@@ -108,7 +111,7 @@ def set_section_solid_pattern(strip_id, section_id,R,G,B): #Process setting a se
     strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
     section_obj = strip_obj.get_section_by_id(section_id)
     if section_obj != False:
-        section_obj.set_pattern(SolidPattern(int(R),int(G),int(B)),str(uuid.uuid4()))
+        section_obj.set_pattern(SolidPattern({'r':int(R),'g':int(G),'b':int(B)},str(uuid.uuid4())))
         return redirect("/dashboard")
 
     else:
@@ -140,20 +143,26 @@ def set_pattern_solid_color(strip_id, pattern_id,R,G,B): #Process moodifying a S
     else:
         return "Error finding that section"
 
-@app.route("/create_sun_pattern/<strip_id>/<section_id>") #JUST FOR TESting, need to accommodate different info block parameters
+@app.route("/set_section_sun_pattern/<strip_id>/<section_id>") #JUST FOR TESting, need to accommodate different info block parameters
 @oidc.require_login
 def create_sunrise_sunset_page(strip_id, section_id):
-    #print((request.remote_addr))
     #print(reader.get(request.remote_addr))
     try:
-        lat = reader.get(request.remote_addr)['location']['latitude']
-        lon = reader.get(request.remote_addr)['location']['longitude']
+        lat = reader.get(request.environ.get('HTTP_X_REAL_IP', request.remote_addr))['location']['latitude']
+        lon = reader.get(request.environ.get('HTTP_X_REAL_IP', request.remote_addr))['location']['longitude']
     except:
-        lat=0
-        lon=0
+        lat=41.5
+        lon=-81.7
 
-    return f"something...lat:{lat}, lon:{lon}"
+    strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
+    section_obj = strip_obj.get_section_by_id(section_id)
+    section_obj.set_pattern(
+        SunPattern(float(lat), float(lon), "US/Eastern", {'r': int(225), 'g': int(50), 'b': int(0)},
+                   {'r': int(255), 'g': int(158), 'b': int(33)}, str(uuid.uuid4())))
 
+    return redirect("/dashboard")
+
+"""
 @app.route("/set_sun_pattern/<strip_id>/<section_id>/<lat>/<lon>/<time_zone>/<R_up>/<G_up>/<B_up>/<R_down>/<G_down>/<B_down>/") #JUST FOR TESting, need to accommodate different info block parameters
 def set_sunrise_sunset_pattern(strip_id, section_id, lat, lon, time_zone, R_up, G_up, B_up, R_down, G_down, B_down):
     strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
@@ -161,7 +170,7 @@ def set_sunrise_sunset_pattern(strip_id, section_id, lat, lon, time_zone, R_up, 
     section_obj.set_pattern(SunPattern(float(lat), float(lon), time_zone, {'r':int(R_down), 'g':int(G_down), 'b':int(B_down)}, {'r':int(R_up), 'g':int(G_up), 'b':int(B_up)}, str(uuid.uuid4())))
 
     return section_obj.current_mode.pattern_id
-
+"""
 @app.route("/print_section_ids/<strip_id>") #JUST FOR TESting, need to accommodate different info block parameters
 def print_section_ids(strip_id):
     strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
