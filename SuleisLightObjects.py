@@ -77,6 +77,8 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         self.update_leds_and_sections()
         self.leds_and_statuses = None
 
+
+
     def get_section_by_id(self, section_id): #Returns the section belonging to this Strip with the given id (or False)
         for section in self.sections_list:
             if section.section_id == section_id:
@@ -387,7 +389,7 @@ class SunPattern:
 
         #3print(self.time_color_table.append(pd.Series({'r':np.NaN,'g':np.NaN,'b':np.NaN},name=minutes_since_midnight_now)).interpolate(method='index'))
         current_color = self.time_color_table.append(pd.Series({'r':np.NaN,'g':np.NaN,'b':np.NaN},name=minutes_since_midnight_now)).interpolate(method='index').round().loc[minutes_since_midnight_now].to_dict()
-        return {'mode':'solid','color':current_color}
+        return {'mode':'so','color':current_color}
 
 
     def get_description_string(self):
