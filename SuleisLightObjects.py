@@ -72,7 +72,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         self.strip_id = strip_id
         self.display_name = display_name
         self.leds_and_sections = [] #List that stores a pointer to the relevant section for each LED (could makke this more memory efficient on average by storing only ranges and sections)
-        self.default_section = Section(self,0, leds_count-1, "Section 1") #Make aa default section for this strip
+        self.default_section = Section(self,0, leds_count-1, str(uuid.uuid4())) #Make aa default section for this strip
         self.sections_list = [self.default_section] #List of all active sections in this strip. Inactive sections (those covered fully by new section(s)) will be removed.
         self.update_leds_and_sections()
         self.leds_and_statuses = None
@@ -102,7 +102,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         if end_led > self.leds_count-1:
             return f"Error: section end led index is greater than that of the last led on the strip {self.leds_count}" #user might see this as 99?
 
-        self.sections_list.append(Section(self,start_led,end_led, f"Section {len(self.sections_list)+1}"))
+        self.sections_list.append(Section(self,start_led,end_led, str(uuid.uuid4())))
         self.update_leds_and_sections()
         self.update_light_statuses()
         return True
@@ -140,6 +140,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
                     #section has been found before, but it isn't the most recent section
                     #now we need to make a copy
                     new_section = copy.deepcopy(leds_and_sections_new[led_num])
+                    new_section.section_id = str(uuid.uuid4())
                     new_section.initial_start_led = led_num
                     self.sections_list.append(new_section)
                     sections_found.append(new_section)
