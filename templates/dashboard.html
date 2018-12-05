@@ -135,8 +135,8 @@
 
       <br>
         Add alarm to {{name}}:
-        <input id="alarm_time_{{light_strip.strip_id}}" name="alarm_entry" type="time" style="height:25px">
-        <input type="image" width="20" height="20" src="/static/alarm.svg" id="alarm_submit_{{light_strip.strip_id}}" onclick="add_alarm(this.id, '{{light_strip.strip_id}}')">
+        <input id="alarm_time_{{light_strip.strip_id}}" name="alarm_entry" type="time" style="height:24px">
+        <input type="image" width="25" height="25" src="/static/save.png" id="alarm_submit_{{light_strip.strip_id}}" onclick="add_alarm(this.id, '{{light_strip.strip_id}}')">
     </li>
     {% endfor %}
   </ul>
