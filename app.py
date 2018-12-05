@@ -1,5 +1,5 @@
 from SuleisLightObjects import MainDatabase, User, Section, Strip, Pattern, SolidPattern, TimePattern, SunPattern, DynamicPattern
-from flask import Flask, render_template, g, redirect, url_for, request
+from flask import Flask, render_template, g, redirect, url_for, request, flash
 from flask_oidc import OpenIDConnect
 from okta import UsersClient
 import pickle, astral
@@ -7,7 +7,6 @@ import uuid
 import maxminddb
 
 #Initialize the components needed for the Okta accounts system
-
 
 
 
@@ -68,7 +67,8 @@ def add_strip(strip_id, leds_count, display_name): #Process adding a strip
     if result == True:
         return render_template("dashboard.html", user_object=user_object)
     else:
-        return result
+        flash(result)
+        return redirect("/dashboard")
 
 
 @app.route("/get_strip_status/<strip_id>/")
@@ -100,7 +100,8 @@ def add_section(strip_id,start_led,end_led): #Process adding a section
             user_object = main_database.return_user_object(g.user)
             return render_template("dashboard.html", user_object=user_object)
         else:
-            return result
+            flash(result)
+            return redirect("/dashboard")
     except Exception as e: #could do better exceptionn handling
 
         return f"{e}:Strip not found or other error"
@@ -118,6 +119,7 @@ def set_section_solid_pattern(strip_id, section_id,R,G,B): #Process setting a se
 
     else:
         return "Error finding that section"
+
 
 @app.route("/set_section_dynamic_pattern/<strip_id>/<section_id>/<dynamic_mode_code>")
 @oidc.require_login
@@ -172,7 +174,7 @@ def add_alarm_to_strip(strip_id, minutes_from_midnight):
     strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
 
     strip_obj.add_alarm(minutes_from_midnight)
-
+    flash("Alarm set!");
     return redirect("/dashboard")
 
 """
