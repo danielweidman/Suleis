@@ -76,6 +76,7 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
         self.sections_list = [self.default_section] #List of all active sections in this strip. Inactive sections (those covered fully by new section(s)) will be removed.
         self.update_leds_and_sections()
         self.leds_and_statuses = None
+        self.alarms = {}
 
 
 
@@ -183,17 +184,47 @@ class Strip: #Class representing a Strip. Can aggregate multiple sections.
 
 
     def update_light_statuses(self):
-        #For each unique section in this strip, call the update_light_status method
-        #After we run this, we should be able to efficienntly assign each pixel status in the Strip
-        new_modes_list = [None for led in range(0,self.leds_count)]
+        # IF NO ALARM: For each unique section in this strip, call the update_light_status method
+        # IF ALARM: set all statuses to the alarm status
+        # After we run this, we should be able to efficienntly assign each pixel status in the Strip
+        now = datetime.datetime.now(pytz.timezone("US/Eastern"))
 
-        for section in set(self.sections_list):
-            section.update_light_status()
+        minutes_since_midnight_now = round(
+            (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds() / 60)
+        print(minutes_since_midnight_now)
 
-        for led_num in range(0,self.leds_count):
-            new_modes_list[led_num] = self.leds_and_sections[led_num].get_light_status()
+        try: #now, we check if a non-repeating alarm went off in the previous minute. we should remove it if so
 
-        self.leds_and_statuses = new_modes_list
+            if self.alarms[round(minutes_since_midnight_now)-1]["repeat"] != True:
+                self.alarms.pop(round(minutes_since_midnight_now)-1,None)
+
+        except KeyError:
+            pass
+
+        try:
+            current_alarm = self.alarms[round(minutes_since_midnight_now)]
+            #exception here if no alarm now
+            for led_num in range(0, self.leds_count):
+                self.leds_and_statuses[led_num] = current_alarm["status"]
+
+
+
+        except KeyError:
+            #no alarm
+
+
+            new_modes_list = [None for led in range(0,self.leds_count)]
+
+            for section in set(self.sections_list):
+                section.update_light_status()
+
+            for led_num in range(0,self.leds_count):
+                new_modes_list[led_num] = self.leds_and_sections[led_num].get_light_status()
+
+            self.leds_and_statuses = new_modes_list
+
+    def add_alarm(self, minutes_from_midnight): #add an alarm to the list
+        self.alarms[minutes_from_midnight] = {"repeat" : False, "status":{"mode":"wf","color":{"r":255, "g":255, "b":255}}} #wf for white flash
 
 
 
@@ -325,6 +356,7 @@ class TimePattern:
         self.pattern_id = pattern_id
 
 
+
         self.color_dict = None
 
     def get_current_status_dict(self):
@@ -341,6 +373,7 @@ class TimePattern:
 
     def get_description_string_small(self):
         return f"Time-based pattern"
+
 
 
 class DynamicPattern:
