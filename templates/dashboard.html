@@ -18,6 +18,8 @@
     {% for name, light_strip in user_object.light_strips.items() %}
 
     <li><strong>{{name}} - </strong>Sections: <input type="image" onclick="add_section('{{light_strip.strip_id}}')" width ="15" height="15" src="/static/plus.svg"/></image>
+
+
     <ol>
       {% for section_dict in light_strip.return_sections_and_patterns_dict() %}
         {% set id =section_dict['range_section'].section_id%}
@@ -128,9 +130,14 @@
 
       {% endfor %}
 
-    </ol>
-    </li>
 
+    </ol>
+
+      <br>
+        Add alarm to {{name}}:
+        <input id="alarm_time_{{light_strip.strip_id}}" name="alarm_entry" type="time" style="height:25px">
+        <input type="image" width="20" height="20" src="/static/alarm.svg" id="alarm_submit_{{light_strip.strip_id}}" onclick="add_alarm(this.id, '{{light_strip.strip_id}}')">
+    </li>
     {% endfor %}
   </ul>
 
@@ -287,6 +294,21 @@ function onPatternTypeChange(id, val, strip_id) {
 }
 </script>
 
+<script>
+function add_alarm(id, strip_id) {
+    var time = document.getElementById ( "alarm_time_"+strip_id ).value
+    var minutes = (time.substring(0,2))*60+parseInt((time.substring(3,5)))
+    if (time && minutes){
+
+
+        window.location.replace(`/add_alarm_to_strip/${strip_id}/${minutes}`);
+    }
+    else{
+    	alert("Please select a valid time for the alarm.");
+    }
+
+}
+</script>
 
 
 
