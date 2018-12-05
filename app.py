@@ -10,6 +10,8 @@ import maxminddb
 
 
 
+
+
 try: #Try to load the database from the saved pickle, make a new one if that fails
     main_database = pickle.load(open("user_database.p",'rb'))
 except:
@@ -158,7 +160,18 @@ def create_sunrise_sunset_page(strip_id, section_id):
     section_obj = strip_obj.get_section_by_id(section_id)
     section_obj.set_pattern(
         SunPattern(float(lat), float(lon), "US/Eastern", {'r': int(225), 'g': int(50), 'b': int(0)},
-                   {'r': int(255), 'g': int(158), 'b': int(33)}, str(uuid.uuid4())))
+                   {'r': int(114), 'g': int(158), 'b': int(223)}, str(uuid.uuid4())))
+    return redirect("/dashboard")
+
+@app.route("/add_alarm_to_strip/<strip_id>/<minutes_from_midnight>")
+@oidc.require_login
+def add_alarm_to_strip(strip_id, minutes_from_midnight):
+
+    minutes_from_midnight = int(minutes_from_midnight)
+
+    strip_obj = main_database.strips_database.loc[strip_id]["Strip Object"]
+
+    strip_obj.add_alarm(minutes_from_midnight)
 
     return redirect("/dashboard")
 
