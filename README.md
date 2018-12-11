@@ -7,11 +7,17 @@ Suleis lets you control your addressable LED strips from an easy-to-use web inte
 
 ## Quick-start guide (unfinished):
 ### While it is possible to use the Suleis platform with many different types of addressable LED strips, here is a tutorial to get your lights up and running quicky in our recomended configuration.
+You will need the following
 - Wemos D1 Mini
 - Arduino Nano V3.0
-- WS2811 LED Strip 
-- 12V Power Suppy
-- Either our PCB or a breadboard and soldering tools
+- WS2811 LED Strip (and appropriate connector)
+- 12V Power Suppy (and jack)
+- Soldering tools
+- Either our Suleis PCB (add link) or a breadboard and wires
+
+
+
+
 
 
 
