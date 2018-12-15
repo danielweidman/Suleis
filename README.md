@@ -19,6 +19,7 @@ In order to build the hardware for Suleis, you will need the following:
 
 Optionally, you can use the Suleis printed circuit board to make the soldering process much easier. An Eagle CAD file is included with the design for the circuit board. We have also set up a URL with a company that offers easy PCB services where you can purchase our custom Suleis PCB: https://dirtypcbs.com/store/designer/details/23306/6211/suleis-intelligent-lights-control-system-pcb
 For this board, you will specifically need the power supply to have a 2.1mm connector (most common), and the Sparkfun PRT-00119 power jack. 
+
 Steps:
 1.	Install the Arduino IDE and the FastLEDs and ArduinoJson libraries, if you haven’t done so already.
 2.	Follow the tutorial at the following page to add the ESP8266 library to your Arduino IDE, if you haven’t done so already: https://github.com/esp8266/Arduino
