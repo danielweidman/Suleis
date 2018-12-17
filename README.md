@@ -25,7 +25,7 @@ Steps:
 2.	Follow the tutorial at the following page to add the ESP8266 library to your Arduino IDE, if you haven’t done so already: https://github.com/esp8266/Arduino
 3.	Use the Arduino IDE to upload the code from the “Suleis_Arduino_Component.ino” sketch to the Arduino Nano. You may need to modify the color order and ‘NUM_LEDS’ in the strip setup of the Arduino code (currently ‘BRG’) to reflect that of your strip hardware. Note that ‘NUM_LEDS’ refers to the number of Neopixels (usually the LED count of your strip divided by 3), not the raw number of LEDS.
 4.	Use the Arduino IDE to upload the code from the “Suleis_ESP8266_Component.ino” sketch to the Wemos D1 Mini. Before you upload the code, edit the file in the locations marked with comments to add your WiFi network name and password, and strip ID.
-5.	Solder together the components based on the following schematic (or just solder the components to the PCB if you have it): https://imgur.com/a/SF6mnXr
+5.	Solder together the components based on the following schematic (or just solder the components to the PCB if you have it): https://imgur.com/a/SF6mnXr. Ensure that, for the 12V lines connecting the power supply and the light strip, you use wire of a thick enough gauge for the power requirements of the light strip.
 	 
 	 
 
