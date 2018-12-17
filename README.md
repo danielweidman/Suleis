@@ -45,4 +45,4 @@ If all has been done properly, you should be able to plug in the power supply an
 
 ## Acknowledgements
 - FastLEDs library for Arduino
-- @rdegges (https://twitter.com/rdegges) and Okta for accounts and some page layout elements
+- Randall Degges and Okta for account management and some page layout elements
