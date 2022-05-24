@@ -1,6 +1,5 @@
 # Suleis
-## Intelligent IoT Lighting Controller
-### [suleis.io](http://suleis.io)
+## Intelligent IoT Lighting Controller (no longer maintained)
 
 
 Suleis lets you control your addressable LED strips from an easy-to-use web interface. It supports lighting both solid and moving (dynamic) lighting patterns, and can show multiple patterns per LED strip. You can even set light alarms to make your lights flash at a certain time or have your lights vary their color based on sunrise and sunset times for your location.
@@ -31,12 +30,6 @@ Steps:
 
 You may either solder the “to_lights_+”, “to_lights_data”, and “to_lights_-“ directly to the red, green, and white wires on the light strip, or you can use a 3-pin JST connector so it can be easily removed.
 If all has been done properly, you should be able to plug in the power supply and the lights should turn on white briefly, then change to whatever color/mode you have set up via the Suleis website, or black if you have not set this up yet. 
-
-
-
-
-
-
 
 
 
